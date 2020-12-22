@@ -202,7 +202,9 @@ func (s *MSPMessageCryptoService) Sign(msg []byte) ([]byte, error) {
 // If the verification succeeded, Verify returns nil meaning no error occurred.
 // If peerIdentity is nil, then the verification fails.
 func (s *MSPMessageCryptoService) Verify(peerIdentity api.PeerIdentityType, signature, message []byte) error {
+
 	identity, chainID, err := s.getValidatedIdentity(peerIdentity)
+	fmt.Printf("=============identity from remote==============\n%+v\n", identity)
 	if err != nil {
 		mcsLogger.Errorf("Failed getting validated identity from peer identity [%s]", err)
 

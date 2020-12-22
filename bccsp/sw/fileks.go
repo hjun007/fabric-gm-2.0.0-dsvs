@@ -129,7 +129,7 @@ func (ks *fileBasedKeyStore) GetKey(ski []byte) (bccsp.Key, error) {
 		case *ecdsa.PrivateKey:
 			return &ecdsaPrivateKey{k}, nil
 		case *sm2.PrivateKey:
-			return &sm2PrivateKey{key.(*sm2.PrivateKey)}, nil
+			return &sm2PrivateKey{key.(*sm2.PrivateKey), nil}, nil
 		default:
 			return nil, errors.New("Secret key type not recognized")
 		}
@@ -227,7 +227,7 @@ func (ks *fileBasedKeyStore) searchKeystoreForSKI(ski []byte) (k bccsp.Key, err 
 		case *ecdsa.PrivateKey:
 			k = &ecdsaPrivateKey{kk}
 		case *sm2.PrivateKey:
-			k = &sm2PrivateKey{key.(*sm2.PrivateKey)}
+			k = &sm2PrivateKey{key.(*sm2.PrivateKey), nil}
 		default:
 			continue
 		}

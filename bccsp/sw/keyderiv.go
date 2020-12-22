@@ -22,9 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cetcxinlian/cryptogm/sm2"
-	"math/big"
-
 	"github.com/hyperledger/fabric/bccsp"
+	"math/big"
 )
 
 type ecdsaPublicKeyKeyDeriver struct{}
@@ -237,9 +236,9 @@ func (kd *sm2PrivateKeyKeyDeriver) KeyDeriv(k bccsp.Key, opts bccsp.KeyDerivOpts
 		// Verify temporary public key is a valid point on the reference curve
 		isOn := tempSK.Curve.IsOnCurve(tempSK.PublicKey.X, tempSK.PublicKey.Y)
 		if !isOn {
-			return nil, errors.New("Failed temporary public key IsOnCurve check.")
+			return nil, errors.New("Failed temporary public key IsO	nCurve check.")
 		}
-		return &sm2PrivateKey{tempSK}, nil
+		return &sm2PrivateKey{tempSK, sm2K.ConfigFile}, nil
 	default:
 		return nil, fmt.Errorf("Unsupported 'KeyDerivOpts' provided [%v]", opts)
 	}

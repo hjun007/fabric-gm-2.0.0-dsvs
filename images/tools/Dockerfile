@@ -14,6 +14,7 @@ RUN apk add --no-cache \
 	musl-dev;
 
 ADD . $GOPATH/src/github.com/hyperledger/fabric
+ADD ./dsvs-test/libsvscc.so /usr/lib
 WORKDIR $GOPATH/src/github.com/hyperledger/fabric
 
 FROM golang as tools

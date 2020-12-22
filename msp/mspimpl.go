@@ -9,9 +9,9 @@ package msp
 import (
 	"bytes"
 	"crypto/x509/pkix"
-	"encoding/hex"
 	"encoding/pem"
-
+	"fmt"
+	"github.com/cetcxinlian/cryptogm/sm2"
 	"github.com/cetcxinlian/cryptogm/x509"
 	"github.com/golang/protobuf/proto"
 	m "github.com/hyperledger/fabric-protos-go/msp"
@@ -20,6 +20,8 @@ import (
 	"github.com/hyperledger/fabric/bccsp/signer"
 	"github.com/hyperledger/fabric/bccsp/sw"
 	"github.com/pkg/errors"
+	"math/big"
+	"os"
 )
 
 // mspSetupFuncType is the prototype of the setup function
@@ -208,29 +210,45 @@ func (msp *bccspmsp) getSigningIdentityFromConf(sidInfo *m.SigningIdentityInfo) 
 	}
 
 	// Extract the public part of the identity
-	idPub, pubKey, err := msp.getIdentityFromConf(sidInfo.PublicSigner)
+	idPub, _, err := msp.getIdentityFromConf(sidInfo.PublicSigner)
 	if err != nil {
 		return nil, err
 	}
 
-	// Find the matching private key in the BCCSP keystore
-	privKey, err := msp.bccsp.GetKey(pubKey.SKI())
-	// Less Secure: Attempt to import Private Key from KeyInfo, if BCCSP was not able to find the key
-	if err != nil {
-		mspLogger.Debugf("Could not find SKI [%s], trying KeyMaterial field: %+v\n", hex.EncodeToString(pubKey.SKI()), err)
-		if sidInfo.PrivateSigner == nil || sidInfo.PrivateSigner.KeyMaterial == nil {
-			return nil, errors.New("KeyMaterial not found in SigningIdentityInfo")
-		}
+	//pubKeyDer, err := tjsm2.MarshalPKIXPublicKey(idPub.(*identity).cert.PublicKey)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//px := pubKeyDer[len(pubKeyDer)-64:len(pubKeyDer)-32]
+	//py := pubKeyDer[len(pubKeyDer)-32:]
+	//X := big.Int{}
+	//Y := big.Int{}
+	//X.SetBytes(px)
+	//Y.SetBytes(py)
 
-		pemKey, _ := pem.Decode(sidInfo.PrivateSigner.KeyMaterial)
-		if pemKey == nil {
-			return nil, errors.Errorf("%s: wrong PEM encoding", sidInfo.PrivateSigner.KeyIdentifier)
-		}
-		privKey, err = msp.bccsp.KeyImport(pemKey.Bytes, &bccsp.ECDSAPrivateKeyImportOpts{Temporary: true})
-		if err != nil {
-			return nil, errors.WithMessage(err, "getIdentityFromBytes error: Failed to import EC private key")
-		}
+	if idPub.(*identity).cert.PublicKey == nil {
+		return nil, errors.New("get id.cert.PublicKey failed")
 	}
+
+	sm2PK, ok := idPub.(*identity).cert.PublicKey.(*sm2.PublicKey)
+	if !ok {
+		return nil, errors.New("get pubkey from cert failed")
+	}
+
+	sm2PrivKey := sm2.PrivateKey{
+		PublicKey: *sm2PK,
+		D: new(big.Int),
+	}
+
+	//os.Setenv("DSVS_CONFIG_FILE", "/home/hj/dsvs/BJCA_SVS_Config.ini")
+	dsvsConfigFile := os.Getenv("DSVS_CONFIG_FILE")
+	if len(dsvsConfigFile) == 0 {
+		fmt.Println("mspimpl.go: env DSVS_CONFIG_FILE not found")
+	}
+	fmt.Printf("DSVS_CONFIG_FILE=%s\n", dsvsConfigFile)
+	//privKey := sw.NewSm2PrivateKey([]byte("/home/hj/dsvs/BJCA_SVS_Config.ini"), &sm2PrivKey)
+	privKey := sw.NewSm2PrivateKey([]byte(dsvsConfigFile), &sm2PrivKey)
+
 
 	// get the peer signer
 	peerSigner, err := signer.New(msp.bccsp, privKey)

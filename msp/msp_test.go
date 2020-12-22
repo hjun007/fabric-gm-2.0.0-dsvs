@@ -9,11 +9,11 @@ package msp
 
 import (
 	"crypto/ecdsa"
-	"github.com/cetcxinlian/cryptogm/x509"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/cetcxinlian/cryptogm/x509"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -88,6 +88,7 @@ func TestGetSigningIdentityFromConfWithWrongPrivateCert(t *testing.T) {
 
 func TestMSPSetupNoCryptoConf(t *testing.T) {
 	mspDir := configtest.GetDevMspDir()
+	mspDir = "/home/hj/go/src/github.com/hyperledger/fabric/sampleconfig/peer0.org1/msp"
 	conf, err := GetLocalMspConfig(mspDir, nil, "SampleOrg")
 	if err != nil {
 		fmt.Printf("Setup should have succeeded, got err %s instead", err)
@@ -177,6 +178,7 @@ func TestNotFoundInBCCSP(t *testing.T) {
 	assert.NoError(t, err)
 
 	dir := configtest.GetDevMspDir()
+	dir = "/home/hj/go/src/github.com/hyperledger/fabric/sampleconfig/peer0.org1/msp"
 	conf, err := GetLocalMspConfig(dir, nil, "SampleOrg")
 
 	assert.NoError(t, err)
@@ -224,13 +226,15 @@ func TestGetSigningIdentityFromVerifyingMSP(t *testing.T) {
 	assert.NoError(t, err)
 
 	mspDir := configtest.GetDevMspDir()
+	mspDir = "/home/hj/go/src/github.com/hyperledger/fabric/sampleconfig/peer0.org1/msp"
+
 	conf, err = GetVerifyingMspConfig(mspDir, "SampleOrg", ProviderTypeToString(FABRIC))
 	if err != nil {
 		fmt.Printf("Setup should have succeeded, got err %s instead", err)
 		os.Exit(-1)
 	}
 
-	newmsp, err := newBccspMsp(MSPv1_0, cryptoProvider)
+	newmsp, err := newBccspMsp(MSPv1_4_3, cryptoProvider)
 	assert.NoError(t, err)
 	err = newmsp.Setup(conf)
 	assert.NoError(t, err)
@@ -242,6 +246,9 @@ func TestGetSigningIdentityFromVerifyingMSP(t *testing.T) {
 }
 
 func TestValidateDefaultSigningIdentity(t *testing.T) {
+
+
+
 	id, err := localMsp.GetDefaultSigningIdentity()
 	assert.NoError(t, err)
 
@@ -1102,9 +1109,14 @@ var localMspBad MSP
 var mspMgr MSPManager
 
 func TestMain(m *testing.M) {
+
+	_ = os.Setenv("DSVS_LIB_FILE", "/home/hj/dsvs/libsvscc.so")
+	_ = os.Setenv("DSVS_CONFIG_FILE", "/home/hj/dsvs/BJCA_SVS_Config.ini")
+
 	var err error
 
 	mspDir := configtest.GetDevMspDir()
+	mspDir = "/home/hj/go/src/github.com/hyperledger/fabric/sampleconfig/peer0.org1/msp"
 	conf, err = GetLocalMspConfig(mspDir, nil, "SampleOrg")
 	if err != nil {
 		fmt.Printf("Setup should have succeeded, got err %s instead", err)
@@ -1189,6 +1201,7 @@ func TestMain(m *testing.M) {
 
 func getIdentity(t *testing.T, path string) Identity {
 	mspDir := configtest.GetDevMspDir()
+	mspDir = "/home/hj/go/src/github.com/hyperledger/fabric/sampleconfig/peer0.org1/msp"
 	pems, err := getPemMaterialFromDir(filepath.Join(mspDir, path))
 	assert.NoError(t, err)
 

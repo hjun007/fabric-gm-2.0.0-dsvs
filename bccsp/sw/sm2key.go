@@ -18,12 +18,14 @@ package sw
 import (
 	"crypto/elliptic"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"github.com/cetcxinlian/cryptogm/sm2"
 	"github.com/cetcxinlian/cryptogm/x509"
 	"github.com/hyperledger/fabric/bccsp"
+	"math/big"
 )
-
+/*
 type sm2PrivateKey struct {
 	privKey *sm2.PrivateKey
 }
@@ -69,6 +71,92 @@ func (k *sm2PrivateKey) PublicKey() (bccsp.Key, error) {
 
 func NewSm2PrivateKey(privKey *sm2.PrivateKey) *sm2PrivateKey {
 	return &sm2PrivateKey{privKey}
+}
+*/
+
+type sm2PrivateKey struct {
+	privKey *sm2.PrivateKey
+	ConfigFile []byte
+}
+
+func NewSm2PrivateKey(configFile []byte, privKey *sm2.PrivateKey) *sm2PrivateKey {
+	return &sm2PrivateKey{privKey, configFile}
+}
+
+// Bytes converts this key to its byte representation,
+// if this operation is allowed.
+func (k *sm2PrivateKey) Bytes() (raw []byte, err error) {
+	return nil, errors.New("cannot get private key bytes")
+}
+
+// SKI returns the subject key identifier of this key.
+func (k *sm2PrivateKey) SKI() (ski []byte) {
+
+	if k.ConfigFile == nil {
+		return nil
+	}
+
+	serverCert, err := GetServerCert(k.ConfigFile)
+	if err != nil {
+		return nil
+	}
+	x, y, err := GetPubKeyFromX509CertPEM(serverCert)
+	if err != nil {
+		return nil
+	}
+	X := big.Int{}
+	Y := big.Int{}
+	X.SetBytes(x)
+	Y.SetBytes(y)
+
+	// Marshall the public key
+	raw := elliptic.Marshal(sm2.P256Sm2(), &X, &Y)
+
+	// Hash it
+	hash := sha256.New()
+	hash.Write(raw)
+	return hash.Sum(nil)
+}
+
+// Symmetric returns true if this key is a symmetric key,
+// false if this key is asymmetric
+func (k *sm2PrivateKey) Symmetric() bool {
+	return false
+}
+
+// Private returns true if this key is a private key,
+// false otherwise.
+func (k *sm2PrivateKey) Private() bool {
+	return true
+}
+
+// PublicKey returns the corresponding public key part of an asymmetric public/private key pair.
+// This method returns an error in symmetric key schemes.
+func (k *sm2PrivateKey) PublicKey() (bccsp.Key, error) {
+
+	//fmt.Printf("configFile=%s\n", k.ConfigFile)
+
+	if k.ConfigFile == nil {
+		return nil, errors.New("config file not specified")
+	}
+
+	serverCert, err := GetServerCert(k.ConfigFile)
+	if err != nil {
+		return nil, errors.New("get server cert err")
+	}
+
+	x, y, err := GetPubKeyFromX509CertPEM(serverCert)
+	if err != nil {
+		return nil, errors.New("get public key from cert failed")
+	}
+
+	X := big.Int{}
+	Y := big.Int{}
+	X.SetBytes(x)
+	Y.SetBytes(y)
+
+	return &sm2PublicKey{&sm2.PublicKey{ Curve: sm2.P256Sm2(), X: &X, Y: &Y}}, nil
+
 }
 
 type sm2PublicKey struct {

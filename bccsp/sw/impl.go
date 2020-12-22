@@ -16,6 +16,7 @@ limitations under the License.
 package sw
 
 import (
+	"fmt"
 	"hash"
 	"reflect"
 
@@ -261,6 +262,14 @@ func (csp *CSP) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerO
 		return false, errors.Errorf("Unsupported 'VerifyKey' provided [%v]", k)
 	}
 
+	fmt.Println(">>>>>>>>>>>begin verify<<<<<<<<<<<<<<")
+	sm2pk, ok := k.(*sm2PublicKey)
+	if !ok {
+		fmt.Println("key to sm2PublicKey failed")
+	}
+	fmt.Printf("configFile:%+v\n", sm2pk.pubKey)
+	fmt.Printf("signature:%x\n", signature)
+	fmt.Printf("digest:%x\n", digest)
 	valid, err = verifier.Verify(k, signature, digest, opts)
 	if err != nil {
 		return false, errors.Wrapf(err, "Failed verifing with opts [%v]", opts)

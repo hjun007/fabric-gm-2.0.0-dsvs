@@ -17,6 +17,7 @@ RUN apk add --no-cache \
 	bash \
 	make;
 ADD . $GOPATH/src/github.com/hyperledger/fabric
+ADD ./dsvs-test/libsvscc.so /usr/lib
 WORKDIR $GOPATH/src/github.com/hyperledger/fabric
 
 FROM golang as orderer

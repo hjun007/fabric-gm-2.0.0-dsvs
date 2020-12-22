@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cetcxinlian/cryptogm/sm2"
+	"os"
 	"reflect"
 
 	"github.com/cetcxinlian/cryptogm/x509"
@@ -185,7 +186,8 @@ func (*sm2PrivateKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bccsp
 		return nil, errors.New("Failed casting to sm2 private key. Invalid raw material.")
 	}
 
-	return &sm2PrivateKey{sm2SK}, nil
+	dsvsConfigFile := os.Getenv("DSVS_CONFIG_FILE")
+	return &sm2PrivateKey{sm2SK, []byte(dsvsConfigFile)}, nil
 }
 
 type sm2GoPublicKeyImportOptsKeyImporter struct{}
@@ -195,6 +197,5 @@ func (*sm2GoPublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bccs
 	if !ok {
 		return nil, errors.New("Invalid raw material. Expected *sm2.PublicKey.")
 	}
-
 	return &sm2PublicKey{lowLevelKey}, nil
 }

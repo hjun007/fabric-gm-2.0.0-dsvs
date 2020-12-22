@@ -72,23 +72,51 @@ func verifySM2(k *sm2.PublicKey, signature, digest []byte, opts bccsp.SignerOpts
 	if err != nil {
 		return false, fmt.Errorf("Failed unmashalling signature [%s]", err)
 	}
-	return sm2.Verify(k, digest, r, s), nil
+	return sm2.VerifyWithDigest(k, digest, r, s), nil
 }
 
 type sm2Signer struct{}
 
 func (s *sm2Signer) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) ([]byte, error) {
-	return signSM2(k.(*sm2PrivateKey).privKey, digest, opts)
+	//return signSM2(k.(*sm2PrivateKey).privKey, digest, opts)
+	fmt.Printf(">>>>signed by dsvs server<<<<<\n")
+	sm2k, ok := k.(*sm2PrivateKey)
+	if !ok {
+		return nil, errors.New("sw.Sign: get config from sm2PrivateKey failed")
+	}
+	return SignHashedData(sm2k.ConfigFile ,digest)
 }
 
 type sm2PrivateKeyVerifier struct{}
 
 func (v *sm2PrivateKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerOpts) (bool, error) {
 	return verifySM2(&(k.(*sm2PrivateKey).privKey.PublicKey), signature, digest, opts)
+
+	//sm2sk, ok := k.(*sm2PrivateKey)
+	//if !ok {
+	//	return false, errors.New("sm2.go: key transfer to sm2PrivateKey failed")
+	//}
+	//serverCert, err := GetServerCert(sm2sk.ConfigFile)
+	//if err != nil {
+	//	return false, errors.New("sm2.go: get server cert failed")
+	//}
+	//fmt.Printf(">>>>verified by dsvs server<<<<<\n")
+	//return VerifyByHashedData(sm2sk.ConfigFile, serverCert, digest, signature)
 }
 
 type sm2PublicKeyKeyVerifier struct{}
 
 func (v *sm2PublicKeyKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerOpts) (bool, error) {
 	return verifySM2(k.(*sm2PublicKey).pubKey, signature, digest, opts)
+
+	//sm2k, ok := k.(*sm2PublicKey)
+	//if !ok {
+	//	return false, errors.New("sw.Verify: get config from sm2PublicKey failed")
+	//}
+	//serverCert, err := GetServerCert(sm2k.ConfigFile)
+	//if err != nil {
+	//	return false, errors.New("sw.Verfiy: get server cert failed")
+	//}
+	//fmt.Printf(">>>>verified by dsvs server<<<<<\n")
+	//return VerifyByHashedData(sm2k.ConfigFile, serverCert, digest, signature)
 }

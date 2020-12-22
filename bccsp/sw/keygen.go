@@ -22,6 +22,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"github.com/cetcxinlian/cryptogm/sm2"
+	"os"
 
 	"github.com/hyperledger/fabric/bccsp"
 )
@@ -62,5 +63,6 @@ func (kg *sm2KeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
 		return nil, fmt.Errorf("Failed generating sm2 key : [%s]", err)
 	}
 
-	return &sm2PrivateKey{privKey}, nil
+	dsvsConfigFile := os.Getenv("DSVS_CONFIG_FILE")
+	return &sm2PrivateKey{privKey, []byte(dsvsConfigFile)}, nil
 }
