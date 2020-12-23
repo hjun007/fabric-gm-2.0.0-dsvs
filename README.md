@@ -32,6 +32,9 @@ $ make release
 $ make docker
 ```
 
+## How to Use
+refers to https://github.com/hjun007/fabric-samples-bjca.git
+
 ## Releases
 
 - [v2.0.0 - January 29, 2020](https://github.com/hyperledger/fabric/releases/tag/v2.0.0)
